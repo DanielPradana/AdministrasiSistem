@@ -80,4 +80,7 @@ case $pilih in
 	3)
 	monitorSystem
 	;;
+	4)
+	exit
+	;;
 esac
