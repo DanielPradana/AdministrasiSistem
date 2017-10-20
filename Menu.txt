@@ -1,0 +1,83 @@
+#!/bin/sh
+
+internetProtocol () {
+	echo "Insert IP Address: "
+	read ip
+	echo "Insert Subnet Mask (ex 255.255.255.0): "
+	read sm
+	echo "Insert Network Address (ex 192.168.1.0): "
+	read na
+	echo "Insert Default Gateway: "
+	read dg
+	echo "# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+auto eth0
+iface eth0 inet static
+	address $ip
+	netmask $sm
+	network $na
+	gateway $dg"> /etc/network/interfaces
+	echo "\n--------------- Successful ----------------------\n\n"
+	echo "please restart service networking with the command below\n"
+	echo "==========================================================\n"
+	echo "			/etc/init.d/networking restart		\n"
+	echo "==========================================================\n"
+}
+
+monitorSystem (){
+printf "Memory\t\tDisk\t\tCPU\n"
+SECONDS=$(date +'%S')
+end=$((SECONDS+3600))
+while [ $SECONDS -lt $end ];
+do
+	m=$(free -m | awk 'NR==2{printf "%.2f%%\t\t", $3*100/$2 }')
+	d=$(df -h | awk 'NR==2{printf "%s%%\t\t", $5}')
+	c=$(top -bn1 | greep load |awk '{printf "%.2f%%\t\t\n/', $(NF-2)}')
+	echo "$m$d$c"
+sleep 5
+done
+}
+
+networkSpeed () {
+read -p 'interface : ' data
+
+while true
+do
+	R1=`cat /sys/class/net/$1/statistics/rx_bytes`
+	T1=`cat /sys/class/net/$1/statistics/tx_bytes`
+	sleep 1
+	R2=`cat /sys/class/net/$1/statistics/rx_bytes`
+	T2=`cat /sys/class/net/$1/statistics/tx_bytes`
+	TBPS=`expr $T2 - $T1`
+	RBPS=`expr $R2 - $R1`
+	TKBPS=`expr TBPS / 1024`
+	RKBPS=`expr RBPS / 1024`
+	echo "tx $1: $TKBPS kb/s rx $1: $RKBPS kb/s"
+done
+}
+
+echo "==================================\n"
+echo "             MENU			\n"
+echo "==================================\n"
+echo "1. IP CONFIG\n"
+echo "2. NETWORK SPEED\n"
+echo "3. MONITOR SYSTEM\n"
+echo "choose: "
+read pilih
+case $pilih in
+	1)
+	internetProtocol
+	;;
+	2)
+	networkSpeed
+	;;
+	3)
+	monitorSystem
+	;;
+esac
